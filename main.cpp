@@ -59,9 +59,15 @@ struct Player {
 // 初始化玩家
 void initPlayer(Player& player) {
     player.level = 0;
-    player.bullets = 5;
-    player.hitRate = 2; // 初始命中率为 2/5
+    player.bullets = 8;
+    player.hitRate = 45; // 初始命中率为 45%
     player.itemCount = 0;
+}
+
+void showValues(Player& player) {
+    cout << "当前等级：" << player.level << endl;
+    cout << "当前子弹数：" << player.bullets << endl;
+    cout << "当前命中率：" << player.hitRate << "%" << endl;
 }
 
 // 显示道具信息
@@ -112,51 +118,88 @@ void useItem(Player& player, Giant& giant) {
 // 升级奖励
 void levelUpReward(Player& player) {
     cout << GREEN << "你升级了！你可以选择一个奖励：" << RESET << endl;
-    cout << "1. 增加 3 发子弹" << endl;
-    cout << "2. 提高命中率" << endl;
-    cout << "3. 获得一个随机道具" << endl;
+
+    // 定义四个奖励选项
+    int rewards[4] = {1, 2, 3, 4};
+    // 随机打乱奖励选项顺序
+    for (int i = 3; i > 0; --i) {
+        int j = rand() % (i + 1);
+        int temp = rewards[i];
+        rewards[i] = rewards[j];
+        rewards[j] = temp;
+    }
+
+    // 显示前三个随机奖励选项
+    for (int i = 0; i < 3; ++i) {
+        switch (rewards[i]) {
+            case 1:
+                cout << i + 1 << ". 增加 10 发子弹" << endl;
+                break;
+            case 2:
+                cout << i + 1 << ". 提高命中率" << endl;
+                break;
+            case 3:
+                cout << i + 1 << ". 获得一个随机道具" << endl;
+                break;
+            case 4:
+                cout << i + 1 << ". 增加 1 格道具栏" << endl;
+                break;
+        }
+    }
+
     int choice;
     cin >> choice;
-    switch (choice) {
-        case 1:
-            player.bullets += 3;
-            cout << GREEN << "你获得了 3 发子弹！" << RESET << endl;
-            break;
-        case 2:
-            // 增加命中率并检查是否超过上限
-            if (player.hitRate < 4) {
-                player.hitRate++;
-            }
-            cout << GREEN << "你的命中率提高了！当前命中率为：" << player.hitRate << "/5" << RESET << endl;
-            break;
-        case 3:
-            if (player.itemCount < 3) {
-                int randomItem = rand() % 4; // 新增一种道具，范围改为 0 - 3
-                Item item;
-                switch (randomItem) {
-                    case 0:
-                        item.name = "普通药剂";
-                        item.effect = 0;
-                        break;
-                    case 1:
-                        item.name = "力量药剂";
-                        item.effect = 1;
-                        break;
-                    case 2:
-                        item.name = "速度药剂";
-                        item.effect = 2;
-                        break;
-                    case 3:
-                        item.name = "万能药剂";
-                        item.effect = 5; // 万能药剂效果编号设为 5
-                        break;
+    if (choice >= 1 && choice <= 3) {
+        switch (rewards[choice - 1]) {
+            case 1:
+                player.bullets += 10;
+                cout << GREEN << "你获得了 10 发子弹！" << RESET << endl;
+                break;
+            case 2:
+                // 增加命中率并检查是否超过上限
+                if (player.hitRate < 90) {
+                    player.hitRate = player.hitRate + 5;
                 }
-                player.items[player.itemCount++] = item;
-                cout << GREEN << "你获得了 " << item.name << "！" << RESET << endl;
-            } else {
-                cout << RED << "你的道具栏已满，无法获得新道具。" << RESET << endl;
-            }
-            break;
+                cout << GREEN << "你的命中率提高了！当前命中率为：" << player.hitRate << "%" << RESET << endl;
+                break;
+            case 3:
+                if (player.itemCount < 3) {
+                    int randomItem = rand() % 4; // 新增一种道具，范围改为 0 - 3
+                    Item item;
+                    switch (randomItem) {
+                        case 0:
+                            item.name = "普通药剂";
+                            item.effect = 0;
+                            break;
+                        case 1:
+                            item.name = "力量药剂";
+                            item.effect = 1;
+                            break;
+                        case 2:
+                            item.name = "速度药剂";
+                            item.effect = 2;
+                            break;
+                        case 3:
+                            item.name = "万能药剂";
+                            item.effect = 5; // 万能药剂效果编号设为 5
+                            break;
+                    }
+                    player.items[player.itemCount++] = item;
+                    cout << GREEN << "你获得了 " << item.name << "！" << RESET << endl;
+                } else {
+                    cout << RED << "你的道具栏已满，无法获得新道具。" << RESET << endl;
+                }
+                break;
+            case 4:
+                // 这里假设道具栏最大为 6 格，可根据需求调整
+                if (player.itemCount < 10) {
+                    cout << GREEN << "你增加了 1 格道具栏！" << RESET << endl;
+                    player.itemCount++;
+                } else {
+                    cout << RED << "你的道具栏已达到最大容量，无法再增加。" << RESET << endl;
+                }
+                break;
+        }
     }
 }
 
@@ -185,7 +228,7 @@ void dropReward(Player& player) {
                     item.effect = 5;
                     break;
             }
-            if (player.itemCount < 3) {
+            if (player.itemCount < 6) {
                 player.items[player.itemCount++] = item;
                 cout << GREEN << "巨人掉落了 " << item.name << "！" << RESET << endl;
             } else {
@@ -194,13 +237,14 @@ void dropReward(Player& player) {
             break;
         }
         case 1:
-            player.bullets += 2;
-            cout << GREEN << "巨人掉落了 2 发子弹！" << RESET << endl;
+            player.bullets += 5;
+            cout << GREEN << "巨人掉落了 5 发子弹！" << RESET << endl;
+
             break;
         case 2:
-            if (player.hitRate < 4) {
-                player.hitRate++;
-                cout << GREEN << "巨人掉落了命中提升，你的命中率提高了！当前命中率为：" << player.hitRate << "/5" << RESET << endl;
+            if (player.hitRate < 90) {
+                player.hitRate = player.hitRate + 5;
+                cout << GREEN << "巨人掉落了命中提升，你的命中率提高了！当前命中率为：" << player.hitRate << "%" << RESET << endl;
             } else {
                 cout << RED << "你的命中率已达到上限，巨人掉落的命中提升未生效。" << RESET << endl;
             }
@@ -214,11 +258,26 @@ int main() {
     initPlayer(player);
 
     cout << YELLOW << "================ 巨人消灭游戏 ================" << RESET << endl;
+    cout << "请选择游戏模式：" << endl;
+    cout << "1. 目标模式" << endl;
+    cout << "2. 无尽模式" << endl;
+    int modeChoice;
+    cin >> modeChoice;
+    int targetLevel = 0;
+    if (modeChoice == 1) {
+        cout << "请设定目标等级：" << endl;
+        cin >> targetLevel;
+    }
 
     while (true) {
+        if (modeChoice == 1 && player.level == targetLevel) {
+            cout << GREEN << "你达到目标等级，你赢了！" << RESET << endl;
+            showValues(player);
+            break;
+        }
         cout << BLUE << "当前等级为：" << player.level << RESET << endl;
         cout << BLUE << "当前子弹数为：" << player.bullets << RESET << endl;
-        cout << BLUE << "当前命中率为：" << player.hitRate << "/5" << RESET << endl;
+        cout << BLUE << "当前命中率为：" << player.hitRate << "%" << RESET << endl;
         showItems(player);
 
         int giantsBeaten = 0;
@@ -239,7 +298,7 @@ int main() {
                     return 0;
                 }
                 player.bullets--;
-                if (rand() % 5 + 1 > player.hitRate) {
+                if (rand() % 100 + 1 > player.hitRate) {
                     cout << RED << "你开枪了，但是没有击中" << RESET << endl;
                 } else {
                     giant.health--;
@@ -260,6 +319,7 @@ int main() {
                 }
             } else if (choice == 3) {
                 cout << YELLOW << "你退出了游戏" << RESET << endl;
+                showItems(player);
                 return 0;
             }
         }
@@ -269,10 +329,6 @@ int main() {
         } else {
             player.level++;
             levelUpReward(player);
-            if (player.level == 10) {
-                cout << GREEN << "你赢了" << RESET << endl;
-                break;
-            }
         }
     }
 
